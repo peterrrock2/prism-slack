@@ -5,9 +5,13 @@
 import os
 import sys
 
-from Prism_Slack_Variables import Prism_Slack_Variables
-from Prism_Slack_Functions import Prism_Slack_Functions
-from Prism_Slack_externalAccess_Functions import Prism_Slack_externalAccess_Functions
+sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
+
+from Scripts.prism_plugin_utils.Prism_Slack_Variables import Prism_Slack_Variables
+from Scripts.prism_plugin_utils.Prism_Slack_Functions import Prism_Slack_Functions
+from Scripts.prism_plugin_utils.Prism_Slack_externalAccess_Functions import (
+    Prism_Slack_externalAccess_Functions,
+)
 
 
 class Prism_Slack(

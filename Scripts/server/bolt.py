@@ -17,7 +17,7 @@ from slack_bolt import App
 
 from PrismCore import PrismCore as core
 from server.events import SlackEvents
-from server.blocks import SlackBlocks
+from Scripts.slack_components.blocks import SlackBlocks
 
 
 class SlackBoltServer:

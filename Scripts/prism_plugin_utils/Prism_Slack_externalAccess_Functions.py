@@ -15,10 +15,10 @@ from qtpy.QtGui import *
 from qtpy.QtWidgets import *
 
 from server.controls import ServerControls
-from integration.slack_config import SlackConfig
-from util.settings_ui import SettingsUI
-from util.tray_ui import TrayUI
-from util.dialogs import *
+from Scripts.client.slack.slack_config import SlackConfig
+from Scripts.client.ui.settings_ui import SettingsUI
+from Scripts.client.ui.tray_ui import TrayUI
+from Scripts.client.ui.dialogs import *
 
 from PrismUtils.Decorators import err_catcher_plugin as err_catcher
 
