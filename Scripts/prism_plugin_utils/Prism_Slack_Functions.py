@@ -15,21 +15,21 @@ from qtpy.QtWidgets import *
 
 # REMOVE THIS IMPORT LINE BEFORE PUBLISH. ONLY DESIGNED TO REMOVE THE PROBLEMS UNDER THE CLASSES
 # from PyQt6 import QtWidgets, QGroupBox, QVBoxLayout, QCheckBox, QComboBox, QLabel, QSpinBox, QFileDialog, QInputDialog, QMessageBox, QAction, QDialog, QTimer
-from server.blocks import SlackBlocks
+from Scripts.slack_components.blocks import SlackBlocks
 
-from integration.slack_config import SlackConfig
-from integration.user_pools import UserPools
-from integration.slack_api import UploadContent, UserInfo, PostMessage
+from Scripts.client.slack.slack_config import SlackConfig
+from Scripts.client.backend.prism.user_pools import UserPools
+from Scripts.client.slack.slack_api import UploadContent, UserInfo, PostMessage
 
 # Updated import to use relative path
-from util.dialogs import (
+from Scripts.client.ui.dialogs import (
     WarningDialog,
     AdditionalInfoDialog,
     SuccessfulPOST,
     UploadDialog,
 )
-from util.state_manager_ui import StateManagerUI
-from util.convert_image_sequence import ConvertImageSequence
+from Scripts.client.ui.state_manager_ui import StateManagerUI
+from Scripts.client.backend.convert_image_sequence import ConvertImageSequence
 
 from PrismUtils.Decorators import err_catcher_plugin as err_catcher
 
@@ -96,12 +96,16 @@ class Prism_Slack_Functions(object):
             if state.chb_slackPublish.isChecked():
                 outputPath = kwargs.get("outputpath", None)
 
-                seq, shot, identifier, version = self.getVersionInfo(outputPath, mode="pb")
+                seq, shot, identifier, version = self.getVersionInfo(
+                    outputPath, mode="pb"
+                )
 
                 ext = os.path.splitext(outputPath)[1].replace(".", "")
 
                 rangeType = state.cb_rangeType.currentText()
-                self.core.popup(f"Seq: {seq}, \nShot: {shot}, \nIdentifier: {identifier}, \nVersion: {version}, \nExt: {ext}, \nRangeType: {rangeType}")
+                self.core.popup(
+                    f"Seq: {seq}, \nShot: {shot}, \nIdentifier: {identifier}, \nVersion: {version}, \nExt: {ext}, \nRangeType: {rangeType}"
+                )
                 if rangeType == "Single Frame" or rangeType in ["Scene", "Shot"]:
                     startFrame = state.l_rangeStart.text()
                     endFrame = state.l_rangeEnd.text()
@@ -201,7 +205,9 @@ class Prism_Slack_Functions(object):
             if state.chb_slackPublish.isChecked():
                 outputPath = kwargs.get("settings", None)["outputName"]
 
-                seq, shot, identifier, version = self.getVersionInfo(outputPath, mode="render")
+                seq, shot, identifier, version = self.getVersionInfo(
+                    outputPath, mode="render"
+                )
 
                 ext = os.path.splitext(outputPath)[1].replace(".", "")
 
@@ -509,7 +515,9 @@ class Prism_Slack_Functions(object):
     @err_catcher(name=__name__)
     def getVersionInfo(self, file, mode):
         if mode == "render":
-            versioninfo = os.path.dirname(os.path.dirname(file)) + "/" + "versioninfo.json"
+            versioninfo = (
+                os.path.dirname(os.path.dirname(file)) + "/" + "versioninfo.json"
+            )
         else:
             versioninfo = os.path.dirname(file) + "/" + "versioninfo.json"
         versioninfo = versioninfo.replace("\\", "/")
@@ -650,7 +658,9 @@ pcore = PrismCore.create(prismArgs=["noUI", "loadProject"])
 path = r\"%s\"
 
 print(f'PRISM OUTPUT FILE' {jobOutputFile})
-"""(self.core.prismRoot, os.path.expandvars(jobOutputFile))
+"""(
+            self.core.prismRoot, os.path.expandvars(jobOutputFile)
+        )
 
         if state.gb_submit.isChecked():
             deadline = self.core.getPlugin("Deadline")
