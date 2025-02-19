@@ -132,9 +132,7 @@ class Prism_Slack_Functions(object):
 
                     if rangeType != "Single Frame" and startFrame < endFrame:
                         if state.chb_mediaConversion.isChecked() is False:
-                            convert = self.convert_image_sequence.convertImageSequence(
-                                outputPath
-                            )
+                            convert = self.convert_image_sequence(self.core, outputPath)
                             outputList = [convert]
 
                     if state.chb_mediaConversion.isChecked() is True:
@@ -152,12 +150,10 @@ class Prism_Slack_Functions(object):
                             sequence = (
                                 f"{converted_directory}/{base} ({ext}).{framePad}.{ext}"
                             )
-                            convert = self.convert_image_sequence.convertImageSequence(
-                                sequence
-                            )
+                            convert = self.convert_image_sequence(self.core, sequence)
                             outputList = [convert]
                 self.core.popup(outputList)
-                self.publishToSlack(
+                self.publish_to_slack(
                     outputList, seq, shot, identifier, version, mode="SM"
                 )
 
@@ -169,7 +165,7 @@ class Prism_Slack_Functions(object):
         state = kwargs.get("state", None)
 
         try:
-            access_token = self.getAccessToken()
+            access_token = self.get_access_token()
         except:
             self.core.popup(
                 "Failed to retrieve Slack access token. Please check your configuration."
@@ -180,7 +176,7 @@ class Prism_Slack_Functions(object):
             if state.chb_slackNotify.isChecked():
                 notify_user = state.cb_userPool.currentText()
                 project = self.getCurrentProject()
-                channel = self.getChannelId(access_token, project)
+                channel = self.get_channel_id(access_token, project)
                 channel_users = self.slack_user_pools.getChannelUsers(
                     access_token, channel
                 )
@@ -239,9 +235,7 @@ class Prism_Slack_Functions(object):
 
                     if rangeType != "Single Frame" and startFrame < endFrame:
                         if state.chb_mediaConversion.isChecked() is False:
-                            convert = self.convert_image_sequence.convertImageSequence(
-                                outputPath
-                            )
+                            convert = self.convert_image_sequence(self.core, outputPath)
                             outputList = [convert]
                         else:
                             option = state.cb_mediaConversion.currentText().lower()
@@ -266,14 +260,12 @@ class Prism_Slack_Functions(object):
                             if ext in ["png", "jpg"]:
                                 framePad = "#" * self.core.framePadding
                                 sequence = f"{converted_directory}/{file} ({ext})_{aov_directory}.{framePad}.{ext}"
-                                convert = (
-                                    self.convert_image_sequence.convertImageSequence(
-                                        sequence
-                                    )
+                                convert = self.convert_image_sequence(
+                                    self.core, sequence
                                 )
                                 outputList = [convert]
 
-                self.publishToSlack(
+                self.publish_to_slack(
                     outputList, seq, shot, identifier, version, mode="SM"
                 )
         return
@@ -299,7 +291,7 @@ class Prism_Slack_Functions(object):
         icon = self.core.media.getColoredIcon(iconPath)
 
         action.triggered.connect(
-            lambda: self.publishToSlack(
+            lambda: self.publish_to_slack(
                 origin.seq,
                 self.sequence,
                 self.shot,
@@ -337,11 +329,11 @@ class Prism_Slack_Functions(object):
     @err_catcher(name=__name__)
     def populateUserPool(self, state):
         try:
-            access_token = self.getAccessToken()
+            access_token = self.get_access_token()
             proj = self.getCurrentProject()
-            channel_id = self.getChannelId(access_token, proj)
+            channel_id = self.get_channel_id(access_token, proj)
 
-            notify_user_pool = self.getNotifyUserPool().lower()
+            notify_user_pool = self.get_notify_user_pool().lower()
             users = []
             if notify_user_pool == "studio":
                 users = self.slack_user_pools.getStudioUsers(state)
@@ -395,27 +387,27 @@ class Prism_Slack_Functions(object):
         return ext
 
     @err_catcher(name=__name__)
-    def getNotifyUserPool(self):
+    def get_notify_user_pool(self):
         slack_config = self.slack_config.loadConfig("studio")
 
         return slack_config["slack"]["notifications"].get("user_pool")
 
     @err_catcher(name=__name__)
-    def getNotifyUserMethod(self):
+    def get_notify_user_method(self):
         slack_config = self.slack_config.loadConfig("studio")
 
         return slack_config["slack"]["notifications"].get("method")
 
     # Get Slack Access Token from environment variable
     @err_catcher(name=__name__)
-    def getAccessToken(self):
+    def get_access_token(self):
         slack_config = self.slack_config.loadConfig("studio")
 
         return slack_config["slack"]["token"]
 
     # Get Slack Channel ID from conversation list
     @err_catcher(name=__name__)
-    def getChannelId(self, access_token, project_name):
+    def get_channel_id(self, access_token, project_name):
         conversation_id = None
 
         try:
@@ -605,20 +597,20 @@ class Prism_Slack_Functions(object):
             SuccessfulPOST(uploaded, method, self.upload_message)
 
     @err_catcher(name=__name__)
-    def publishToSlack(self, file, seq, shot, identifier, version, mode):
+    def publish_to_slack(self, file, seq, shot, identifier, version, mode):
         current_project = self.core.getConfig(
             "globals", "project_name", configPath=self.core.prismIni
         ).lower()
 
         try:
-            access_token = self.getAccessToken()
+            access_token = self.get_access_token()
         except Exception as e:
             self.core.popup(
                 f"Failed to retrieve Slack access token. Please check your configuration.\n\n{e}"
             )
             return
 
-        conversation_id = self.getChannelId(access_token, current_project)
+        conversation_id = self.get_channel_id(access_token, current_project)
         file_upload = file[0]
         file_upload.replace("\\", "/")
 
@@ -643,40 +635,3 @@ class Prism_Slack_Functions(object):
     def isStudioLoaded(self):
         studio = self.core.plugins.getPlugin("Studio")
         return studio
-
-    @err_catcher(__name__)
-    def submitPythonJob(self, origin, jobId, jobOutputFile, jobName):
-        jobData = origin.stateManager.submittedDlJobData[jobId]
-        code = """
-import sys
-
-root = \"%s\"
-sys.path.append(root + "/Scripts")
-
-import PrismCore
-pcore = PrismCore.create(prismArgs=["noUI", "loadProject"])
-path = r\"%s\"
-
-print(f'PRISM OUTPUT FILE' {jobOutputFile})
-"""(
-            self.core.prismRoot, os.path.expandvars(jobOutputFile)
-        )
-
-        if state.gb_submit.isChecked():
-            deadline = self.core.getPlugin("Deadline")
-            deadline.submitPythonJob(
-                code,
-                jobName,
-                jobPrio=80,
-                jobPool=jobData["jobInfos"]["Pool"],
-                jobSndPool=jobData["jobInfos"]["SecondaryPool"],
-                jobGroup=jobData["jobInfos"]["Group"],
-                jobTimeOut=jobData["jobInfos"]["TaskTimeoutMinutes"],
-                jobMachineLimit=jobData["jobInfos"]["MachineLimit"],
-                jobComment="Prism-Submission-Update_Master",
-                jobBatchName=jobData["jobInfos"].get("BatchName"),
-                frames="1",
-                suspended=jobData["jobInfos"].get("InitialStatus") == "Suspended",
-                jobDependencies=[jobId],
-                state=origin,
-            )
