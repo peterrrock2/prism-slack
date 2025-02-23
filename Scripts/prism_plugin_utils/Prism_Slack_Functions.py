@@ -29,9 +29,25 @@ from Scripts.client.ui.dialogs import (
     UploadDialog,
 )
 from Scripts.client.ui.state_manager_ui import StateManagerUI
-from Scripts.client.backend.convert_image_sequence import ConvertImageSequence
+from Scripts.client.prism.utils.convert_image_sequence import ConvertImageSequence
 
 from PrismUtils.Decorators import err_catcher_plugin as err_catcher
+
+from functools import partial
+
+media_callback_with_core = partial(mediaPlayerContextMenuRequested, core=core)
+
+# media_callback_with_core is a new function that has the "core" variable
+# already set
+media_callback_with_core = mediaPlayerContextMenuRequested(core=core)
+
+
+class media_callback_with_core:
+    def __init__(self, core):
+        self.core = core
+
+    def __call__(self, origin, menu):
+        return mediaPlayerContextMenuRequested(core=self.core, origin=origin, menu=menu)
 
 
 class Prism_Slack_Functions(object):
@@ -50,6 +66,11 @@ class Prism_Slack_Functions(object):
         self.core.registerCallback(
             "mediaPlayerContextMenuRequested",
             self.mediaPlayerContextMenuRequested,
+            plugin=self,
+        )
+        self.core.registerCallback(
+            "mediaPlayerContextMenuRequested",
+            mediaPlayerContextMenuRequested(self.core),
             plugin=self,
         )
         self.core.registerCallback("onStateStartup", self.onStateStartup, plugin=self)

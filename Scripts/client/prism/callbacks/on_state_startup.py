@@ -1,5 +1,5 @@
 from Scripts.client.slack.api import get_channel_users, get_team_users, get_studio_users
-from Scripts.client.ui.state_manager_ui import StateManagerUI
+from Scripts.client.prism.ui.state_manager_ui import StateManagerUI
 
 
 def __init__(self, core):
